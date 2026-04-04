@@ -34,10 +34,12 @@ YT_OPTS=(
     --download-archive "$ARCHIVE_FILE"
     -f "$FORMAT"
     "${SUB_FLAGS[@]}"
-    --downloader ffmpeg
-    --hls-use-mpegts
     --impersonate chrome
     --extractor-args "generic:impersonate"
+    --retries 10
+    --fragment-retries 10
+    --retry-sleep 5
+    --file-access-retries 3
 )
 
 mkdir -p "$OUTPUT_DIR"

@@ -1,7 +1,6 @@
 #!/bin/bash
-# yt-dl-single.sh
+# single-dl.sh
 # Downloads a single video with yt-dlp.
-# Usage: ./yt-dl-single.sh <url> [filename]
 # Requires: yt-dlp with curl-cffi → pip install "yt-dlp[default,curl-cffi]"
 
 # --- Config ---

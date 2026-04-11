@@ -1,10 +1,6 @@
 # Automation Scripts
 
-A collection of bash scripts for automating remote desktop connections, network mounts, and media downloads.
-
-## Getting Started
-
-Each script has specific dependencies. Ensure they are installed before running the scripts to avoid errors.
+A collection of bash and python scripts for automating remote desktop connections, network mounts, media downloads, and more.
 
 ---
 
@@ -42,7 +38,6 @@ Scripts for downloading videos and audio from various platforms.
 
 ### `yt-dlp/single-dl.sh`
 Downloads a single video/audio URL with customizable quality settings.
-- **Usage:** `./single-dl.sh <url> [filename]`
 - **Dependencies:** 
   - Python 3
   - `pip install "yt-dlp[default,curl-cffi]"`
@@ -62,7 +57,6 @@ Downloads multiple URLs or entire playlists from a text file. Handles archiving 
 ### `mullvad-check/mullvad-check.py`
 A lightweight Python script that queries the Mullvad status endpoint to reveal your current public IP, location, and ISP. It is handy for quickly verifying that a VPN connection is active.
 
-- **Usage:** `python3 mullvad-check/mullvad-check.py`
 - **Dependencies:**
   - Python 3
   - `curl` (used internally via subprocess)

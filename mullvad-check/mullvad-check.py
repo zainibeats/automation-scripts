@@ -29,7 +29,8 @@ def print_information_to_user(data) -> None:
 
 # Main loop
 if __name__ == "__main__":
-    try:# Run mullvad check and return full output
+    try:
+        # Run mullvad check and return full output
         raw_output = mullvad_check()
         # Transform raw output to dict
         data = format_output(raw_output)

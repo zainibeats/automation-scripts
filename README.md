@@ -37,14 +37,14 @@ Mounts a remote directory over SSH using `sshfs`.
 Scripts for downloading videos and audio from various platforms.
 
 ### `yt-dlp/single-dl.sh`
-Downloads a single video/audio URL with customizable quality settings.
+Downloads a single video or audio track from a URL stored in `~/Documents/url`. Mirrors the same config and logic as `batch-dl.sh` — supports quality selection, auto subtitles, title vs. numbered output naming, and archive-based resume — without playlist or batch iteration.
 - **Dependencies:** 
   - Python 3
   - `pip install "yt-dlp[default,curl-cffi]"`
   - `ffmpeg`
 
 ### `yt-dlp/batch-dl.sh`
-Downloads multiple URLs or entire playlists from a text file. Handles archiving to prevent duplicate downloads.
+Downloads multiple URLs or entire playlists from a text file (`~/Documents/playlist.txt`). Handles archiving to prevent duplicate downloads, playlist index prefixing, and falls back to numbered naming when title extraction fails.
 - **Dependencies:** 
   - Python 3
   - `pip install "yt-dlp[default,curl-cffi]"`

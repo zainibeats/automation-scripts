@@ -52,6 +52,15 @@ Downloads multiple URLs or entire playlists from a text file (`~/Documents/playl
 
 ---
 
+## Image Conversion
+
+### `heic-convert/heic-to-jpg.sh`
+Batch converts HEIC/HEIF images to JPEG. Supports recursive directory scanning, configurable output quality, skipping already-converted files, and optionally moving originals to an archive directory. All options are configurable via environment variables (see top of script).
+- **Dependencies:**
+  - `heif-convert` — `sudo apt install libheif-examples` (Debian/Ubuntu) or `brew install libheif` (macOS)
+
+---
+
 ## Network Utilities
 
 ### `mullvad-check/mullvad-check.py`

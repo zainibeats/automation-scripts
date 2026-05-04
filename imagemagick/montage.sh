@@ -21,7 +21,9 @@ LOG_FILE="${LOG_FILE:-}"              # leave empty to disable file logging
 log() {
     local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $*"
     echo "$msg"
-    [[ -n "$LOG_FILE" ]] && echo "$msg" >> "$LOG_FILE"
+    if [[ -n "$LOG_FILE" ]]; then
+        echo "$msg" >> "$LOG_FILE"
+    fi
 }
 
 die() {

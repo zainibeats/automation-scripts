@@ -32,6 +32,21 @@ Mounts a remote directory over SSH using `sshfs`.
 
 ---
 
+## Bluetooth
+
+### `bluetooth/bluetoothctl-connect.sh`
+Connects to, disconnects from, toggles, or checks the status of a configured Bluetooth device. Edit the `DEVICE_MAC` value at the top of the script to choose the target device.
+
+- **Usage:**
+  - `./bluetooth/bluetoothctl-connect.sh connect`
+  - `./bluetooth/bluetoothctl-connect.sh disconnect`
+  - `./bluetooth/bluetoothctl-connect.sh toggle`
+  - `./bluetooth/bluetoothctl-connect.sh status`
+- **Dependencies:**
+  - `bluetoothctl` / BlueZ
+
+---
+
 ## Media Downloads (`yt-dlp`)
 
 Scripts for downloading videos and audio from various platforms.

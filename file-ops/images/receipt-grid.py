@@ -14,7 +14,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 HEIC_EXTENSIONS = {".heic", ".heif"}
 JPEG_EXTENSIONS = {".jpg", ".jpeg"}
-SUPPORTED_EXTENSIONS = HEIC_EXTENSIONS | JPEG_EXTENSIONS
+GRID_READY_EXTENSIONS = JPEG_EXTENSIONS | {".png", ".webp", ".tif", ".tiff", ".bmp"}
+SUPPORTED_EXTENSIONS = HEIC_EXTENSIONS | GRID_READY_EXTENSIONS
 
 
 @dataclass(frozen=True)
@@ -73,8 +74,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--background",
-        default="white",
-        help="Grid background color understood by Pillow. Defaults to white.",
+        default="black",
+        help="Grid background color understood by Pillow. Defaults to black.",
     )
     parser.add_argument(
         "--overwrite",
@@ -84,7 +85,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-convert",
         action="store_true",
-        help="Skip HEIC conversion and only use existing JPG/JPEG files.",
+        help="Skip HEIC conversion and only use grid-ready image files.",
+    )
+    parser.add_argument(
+        "--convert-only",
+        action="store_true",
+        help="Convert HEIC/HEIF files to JPG and stop before creating the grid.",
     )
     parser.add_argument(
         "--recursive",
@@ -264,10 +270,12 @@ def main() -> None:
     sources = [path for path in sources if not is_relative_to(path.resolve(), converted_dir)]
     sources = [path for path in sources if not path.name.startswith(".")]
     if not sources:
-        fail(f"No HEIC/JPG images found in {input_dir}")
+        fail(f"No supported receipt images found in {input_dir}")
 
     heic_sources = [path for path in sources if path.suffix.lower() in HEIC_EXTENSIONS]
-    jpeg_sources = [path for path in sources if path.suffix.lower() in JPEG_EXTENSIONS]
+    grid_ready_sources = [
+        path for path in sources if path.suffix.lower() in GRID_READY_EXTENSIONS
+    ]
 
     converted_heic: list[Path] = []
     if heic_sources and not args.no_convert:
@@ -281,9 +289,13 @@ def main() -> None:
     elif heic_sources:
         print(f"skip HEIC conversion: {len(heic_sources)} file(s)")
 
-    grid_images = sorted(set(converted_heic + jpeg_sources))
+    if args.convert_only:
+        print(f"converted: {len(converted_heic)} file(s)")
+        return
+
+    grid_images = sorted(set(converted_heic + grid_ready_sources))
     if not grid_images:
-        fail("No JPG images available after conversion.")
+        fail("No grid-ready images available after conversion.")
 
     make_grid(
         grid_images,

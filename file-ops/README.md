@@ -6,9 +6,9 @@ Scripts for local file and media manipulation.
 
 ### `images/receipt-grid.py`
 
-Converts HEIC/HEIF receipt images to JPG and combines JPG receipts into one
-balanced grid image. This is the preferred cross-platform receipt workflow for
-Windows, macOS, and Linux.
+Converts HEIC/HEIF receipt images to JPG when needed and combines receipt
+images into one balanced grid image. This is the preferred cross-platform
+receipt workflow for Windows, macOS, and Linux.
 
 Dependencies:
 
@@ -46,17 +46,27 @@ python file-ops/images/receipt-grid.py ~/Pictures/receipts -o ~/Desktop/receipts
 # Search subfolders too
 python file-ops/images/receipt-grid.py ~/Pictures/receipts --recursive
 
+# Build a grid only from existing JPG/PNG/WebP/TIFF/BMP files
+python file-ops/images/receipt-grid.py ~/Pictures/receipts --no-convert
+
+# Convert HEIC/HEIF files to JPG and stop before building the grid
+python file-ops/images/receipt-grid.py ~/Pictures/receipts --convert-only
+
 # PNG output is supported by using a .png filename
 python file-ops/images/receipt-grid.py ~/Pictures/receipts -o weekly-receipts.png
 ```
 
 Behavior:
 
-- Accepts any number of `.heic`, `.heif`, `.jpg`, and `.jpeg` files.
+- Accepts any number of `.heic`, `.heif`, `.jpg`, `.jpeg`, `.png`, `.webp`,
+  `.tif`, `.tiff`, and `.bmp` files.
 - Leaves original HEIC/HEIF files untouched.
 - Writes converted JPG files to `converted/` inside the input folder by default.
+- Uses existing JPG/PNG/WebP/TIFF/BMP files directly in the grid without
+  converting them first.
 - Builds balanced grids such as `1x2`, `2x2`, `2x3`, `2x4`, `3x4`, and `4x4`.
 - Uses JPG output by default.
+- Uses a black background by default.
 
 ### `images/heic-to-jpg.sh`
 

@@ -1,92 +1,33 @@
 # Automation Scripts
 
-A collection of bash and python scripts for automating remote desktop connections, network mounts, media downloads, and more.
+Personal automation scripts for file operations, media workflows, networking,
+and system administration.
 
----
+The repo is organized by category. Each category has its own README with the
+scripts, dependencies, and usage notes for that area.
 
-## Remote Desktop (RDP)
+## Categories
 
-Scripts for connecting to Windows/Remote Desktop environments.
+- [File operations](file-ops/README.md) - image conversion, montage creation,
+  media resizing, and batch renaming.
+- [Media](media/README.md) - audio transfer helpers and `yt-dlp` download
+  scripts.
+- [Network](network/README.md) - remote filesystem mounts and VPN/IP checks.
+- [System](system/README.md) - Bluetooth and remote desktop helpers.
 
-### `freerdp/xfreerdp.sh`
-Automates a full-screen RDP session with predefined credentials.
-- **Dependencies:** 
-  - `xfreerdp`
+## Layout
 
----
-
-## Network Mounts
-
-Scripts to automate mounting remote filesystems via NFS or SSHFS.
-
-### `remote_mount/nfs-mount.sh`
-Mounts an NFS share from a specified server. **Note: Requires root privileges.**
-- **Dependencies:** 
-  - `nfs-common` (on Linux)
-  - Root/Sudo access
-
-### `remote_mount/sshfs-mount.sh`
-Mounts a remote directory over SSH using `sshfs`.
-- **Dependencies:** 
-  - `sshfs`
-
----
-
-## Bluetooth
-
-### `bluetooth/bluetoothctl-connect.sh`
-Connects to, disconnects from, toggles, or checks the status of a configured Bluetooth device. Edit the `DEVICE_MAC` value at the top of the script to choose the target device.
-
-- **Usage:**
-  - `./bluetooth/bluetoothctl-connect.sh connect`
-  - `./bluetooth/bluetoothctl-connect.sh disconnect`
-  - `./bluetooth/bluetoothctl-connect.sh toggle`
-  - `./bluetooth/bluetoothctl-connect.sh status`
-- **Dependencies:**
-  - `bluetoothctl` / BlueZ
-
----
-
-## Media Downloads (`yt-dlp`)
-
-Scripts for downloading videos and audio from various platforms.
-
-### `yt-dlp/single-dl.sh`
-Downloads a single video or audio track from a URL stored in `~/Documents/url`. Mirrors the same config and logic as `batch-dl.sh` — supports quality selection, auto subtitles, title vs. numbered output naming, and archive-based resume — without playlist or batch iteration.
-- **Dependencies:** 
-  - Python 3
-  - `pip install "yt-dlp[default,curl-cffi]"`
-  - `ffmpeg`
-
-### `yt-dlp/batch-dl.sh`
-Downloads multiple URLs or entire playlists from a text file (`~/Documents/playlist.txt`). Handles archiving to prevent duplicate downloads, playlist index prefixing, and falls back to numbered naming when title extraction fails.
-- **Dependencies:** 
-  - Python 3
-  - `pip install "yt-dlp[default,curl-cffi]"`
-  - `ffmpeg`
-
----
-
-## Image Utilities
-
-### `heic-convert/heic-to-jpg.sh`
-Batch converts HEIC/HEIF images to JPEG. Supports recursive directory scanning, configurable output quality, skipping already-converted files, and optionally moving originals to an archive directory. All options are configurable via environment variables (see top of script).
-- **Dependencies:**
-  - `heif-convert` — `sudo apt install libheif-examples` (Debian/Ubuntu) or `brew install libheif` (macOS)
-
-### `imagemagick/montage.sh`
-Generates a single composite image from a directory of images using ImageMagick's `montage`. Tile layout, cell spacing, file extension, and background color are all configurable via environment variables (see top of script).
-- **Dependencies:**
-  - `montage` — `sudo apt install imagemagick` (Debian/Ubuntu) or `brew install imagemagick` (macOS)
-
----
-
-## Network Utilities
-
-### `mullvad-check/mullvad-check.py`
-A lightweight Python script that queries the Mullvad status endpoint to reveal your current public IP, location, and ISP. It is handy for quickly verifying that a VPN connection is active.
-
-- **Dependencies:**
-  - Python 3
-  - `curl` (used internally via subprocess)
-  - Basic logging setup (`logger` module expected in the project root).
+```text
+file-ops/
+  images/
+  renaming/
+media/
+  audio-transfer/
+  downloads/
+network/
+  remote-mount/
+  vpn-check/
+system/
+  bluetooth/
+  remote-desktop/
+```

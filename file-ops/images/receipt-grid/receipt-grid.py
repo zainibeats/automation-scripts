@@ -111,7 +111,7 @@ def ensure_heif_support() -> None:
     except ImportError:
         fail(
             "HEIC/HEIF files require pillow-heif. Install dependencies with "
-            "'python -m pip install -r file-ops/images/requirements-receipts.txt'."
+            "'python -m pip install -r file-ops/images/receipt-grid/requirements.txt'."
         )
 
     register_heif_opener()

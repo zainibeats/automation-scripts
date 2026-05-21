@@ -4,7 +4,7 @@ Scripts for local file and media manipulation.
 
 ## Image Utilities
 
-### `images/receipt-grid.py`
+### `images/receipt-grid/receipt-grid.py`
 
 Converts HEIC/HEIF receipt images to JPG when needed and combines receipt
 images into one balanced grid image. This is the preferred cross-platform
@@ -19,41 +19,41 @@ Dependencies:
 Install dependencies with either:
 
 ```bash
-python -m pip install -r file-ops/images/requirements-receipts.txt
+python -m pip install -r file-ops/images/receipt-grid/requirements.txt
 ```
 
 or:
 
 ```bash
-uv pip install -r file-ops/images/requirements-receipts.txt
+uv pip install -r file-ops/images/receipt-grid/requirements.txt
 ```
 
 Run from the repo root:
 
 ```bash
-python file-ops/images/receipt-grid.py ~/Pictures/receipts
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts
 ```
 
 Common examples:
 
 ```bash
 # Write a JPG grid to the input folder as weekly-receipts.jpg
-python file-ops/images/receipt-grid.py ~/Pictures/receipts
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts
 
 # Choose the final output path
-python file-ops/images/receipt-grid.py ~/Pictures/receipts -o ~/Desktop/receipts.jpg
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts -o ~/Desktop/receipts.jpg
 
 # Search subfolders too
-python file-ops/images/receipt-grid.py ~/Pictures/receipts --recursive
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --recursive
 
 # Build a grid only from existing JPG/PNG/WebP/TIFF/BMP files
-python file-ops/images/receipt-grid.py ~/Pictures/receipts --no-convert
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --no-convert
 
 # Convert HEIC/HEIF files to JPG and stop before building the grid
-python file-ops/images/receipt-grid.py ~/Pictures/receipts --convert-only
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --convert-only
 
 # PNG output is supported by using a .png filename
-python file-ops/images/receipt-grid.py ~/Pictures/receipts -o weekly-receipts.png
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts -o weekly-receipts.png
 ```
 
 Behavior:

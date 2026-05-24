@@ -9,6 +9,7 @@ receipt workflow for Windows, macOS, and Linux.
 - Python 3.10+
 - `Pillow`
 - `pillow-heif`
+- `pypdf`
 
 ## Install
 
@@ -66,6 +67,32 @@ python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --conver
 # PNG output is supported by using a .png filename
 python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts -o weekly-receipts.png
 ```
+
+## Append the grid to a downloaded PDF
+
+After submitting the montage image on the company website and manually
+downloading the PDF, append the montage as the final US Letter page:
+
+```bash
+python file-ops/images/receipt-grid/append-receipt-page.py ~/Downloads/company.pdf ~/Desktop/firstname-expenses_date.jpg
+```
+
+By default, the final PDF uses the image name with a `.pdf` extension:
+
+```text
+~/Desktop/firstname-expenses_date.pdf
+```
+
+The montage image is preserved. The appended page keeps the image aspect ratio,
+centers it on a white page, and never crops or stretches receipts.
+
+Choose an explicit output path:
+
+```bash
+python file-ops/images/receipt-grid/append-receipt-page.py ~/Downloads/company.pdf ~/Desktop/firstname-expenses_date.jpg -o ~/Desktop/final.pdf
+```
+
+Existing output files are not replaced unless `--overwrite` is passed.
 
 ## Behavior
 

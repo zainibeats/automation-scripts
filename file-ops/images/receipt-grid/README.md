@@ -1,8 +1,8 @@
 # Receipt Grid
 
-Converts HEIC/HEIF receipt images to JPG when needed and combines receipt
-images into one balanced grid image. This is the preferred cross-platform
-receipt workflow for Windows, macOS, and Linux.
+Combines HEIC, HEIF, JPG, JPEG, and PNG receipt images into one balanced JPG
+montage. It processes a local folder of receipt images and writes a single JPG
+grid that can be attached to a report, archived, or added to a PDF.
 
 ## Dependencies
 
@@ -55,27 +55,20 @@ python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts
 # Choose the final output path
 python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts -o ~/Desktop/receipts.jpg
 
-# Search subfolders too
-python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --recursive
-
-# Build a grid only from existing JPG/PNG/WebP/TIFF/BMP files
-python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --no-convert
-
-# Convert HEIC/HEIF files to JPG and stop before building the grid
-python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --convert-only
-
-# PNG output is supported by using a .png filename
-python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts -o weekly-receipts.png
+# Raise the batch limit for an unusually large receipt set
+python file-ops/images/receipt-grid/receipt-grid.py ~/Pictures/receipts --max-images 60
 ```
 
-## Append the grid to a downloaded PDF
+## Append the grid to a PDF
 
-After submitting the montage image on the company website and manually
-downloading the PDF, append the montage as the final US Letter page:
+Append the montage as the final US Letter page of an existing PDF:
 
 ```bash
-python file-ops/images/receipt-grid/append-receipt-page.py ~/Downloads/company.pdf ~/Desktop/firstname-expenses_date.jpg
+python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-expenses_date.jpg
 ```
+
+The append script looks for `AX_CON_EXP.pdf` in the current user's Downloads
+folder by default. Use `--pdf` to choose a different input PDF.
 
 By default, the final PDF uses the image name with a `.pdf` extension:
 
@@ -89,19 +82,36 @@ centers it on a white page, and never crops or stretches receipts.
 Choose an explicit output path:
 
 ```bash
-python file-ops/images/receipt-grid/append-receipt-page.py ~/Downloads/company.pdf ~/Desktop/firstname-expenses_date.jpg -o ~/Desktop/final.pdf
+python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-expenses_date.jpg -o ~/Desktop/final.pdf
+```
+
+Choose a different input PDF location:
+
+```bash
+python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-expenses_date.jpg --pdf ~/Desktop/AX_CON_EXP.pdf
 ```
 
 Existing output files are not replaced unless `--overwrite` is passed.
 
+The append script expects the input PDF to be unencrypted and small. The
+default input PDF limit is 10 pages; raise it only when larger files are
+expected:
+
+```bash
+python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-expenses_date.jpg --max-pdf-pages 20
+```
+
 ## Behavior
 
-- Accepts any number of `.heic`, `.heif`, `.jpg`, `.jpeg`, `.png`, `.webp`,
-  `.tif`, `.tiff`, and `.bmp` files.
-- Leaves original HEIC/HEIF files untouched.
-- Writes converted JPG files to `converted/` inside the input folder by default.
-- Uses existing JPG/PNG/WebP/TIFF/BMP files directly in the grid without
-  converting them first.
+- Accepts `.heic`, `.heif`, `.jpg`, `.jpeg`, and `.png` receipt images up to
+  the default safety limit of 40 images.
+- Only scans files directly inside the input folder. Subfolders are ignored.
+- Leaves original receipt images untouched and does not keep converted copies.
 - Builds balanced grids such as `1x2`, `2x2`, `2x3`, `2x4`, `3x4`, and `4x4`.
-- Uses JPG output by default.
+- Always writes the montage as JPG.
 - Uses a black background by default.
+- Replaces generated image/PDF files atomically, so an interrupted run is less
+  likely to leave a partial final output.
+- Fails clearly when inputs exceed configured safety limits. Use
+  `--max-images`, `--max-image-pixels`, `--max-output-pixels`, or
+  `--max-pdf-pages` to raise a limit for larger trusted inputs.

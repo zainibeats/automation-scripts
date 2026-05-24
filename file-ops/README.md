@@ -7,8 +7,7 @@ Scripts for local file and media manipulation.
 ### `images/receipt-grid/receipt-grid.py`
 
 Converts HEIC/HEIF receipt images to JPG when needed and combines receipt
-images into one balanced grid image. This is the preferred cross-platform
-receipt workflow for Windows, macOS, and Linux.
+images into one balanced grid image. Supports Windows, macOS, and Linux.
 
 See `images/receipt-grid/README.md` for install and usage instructions.
 

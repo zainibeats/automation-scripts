@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-"""Convert receipt images and combine them into a balanced grid."""
+"""Combine receipt images into a balanced JPG grid."""
 
 from __future__ import annotations
 
 import argparse
 import math
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 HEIC_EXTENSIONS = {".heic", ".heif"}
 JPEG_EXTENSIONS = {".jpg", ".jpeg"}
-GRID_READY_EXTENSIONS = JPEG_EXTENSIONS | {".png", ".webp", ".tif", ".tiff", ".bmp"}
-SUPPORTED_EXTENSIONS = HEIC_EXTENSIONS | GRID_READY_EXTENSIONS
+PNG_EXTENSIONS = {".png"}
+SUPPORTED_EXTENSIONS = HEIC_EXTENSIONS | JPEG_EXTENSIONS | PNG_EXTENSIONS
+DEFAULT_MAX_IMAGES = 40
+DEFAULT_MAX_IMAGE_PIXELS = 80_000_000
+DEFAULT_MAX_OUTPUT_PIXELS = 200_000_000
 
 
 @dataclass(frozen=True)
@@ -26,10 +29,7 @@ class GridSize:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Convert HEIC/HEIF receipts to JPG and combine receipts into a "
-            "balanced grid image."
-        )
+        description="Combine HEIC, JPG, and PNG receipts into a balanced JPG grid."
     )
     parser.add_argument(
         "input_dir",
@@ -41,18 +41,13 @@ def parse_args() -> argparse.Namespace:
         "-o",
         "--output",
         default="weekly-receipts.jpg",
-        help="Final grid image path. Use .jpg/.jpeg or .png. Defaults to weekly-receipts.jpg.",
-    )
-    parser.add_argument(
-        "--converted-dir",
-        default="converted",
-        help="Folder for converted JPG files. Relative paths live inside input_dir.",
+        help="Final JPG grid path. Defaults to weekly-receipts.jpg inside input_dir.",
     )
     parser.add_argument(
         "--quality",
         type=int,
         default=90,
-        help="JPEG quality for converted files and JPG grid output. Defaults to 90.",
+        help="JPEG quality for the grid output. Defaults to 90.",
     )
     parser.add_argument(
         "--cell-width",
@@ -80,22 +75,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Overwrite existing converted JPG files.",
+        help="Overwrite the output JPG if it already exists.",
     )
     parser.add_argument(
-        "--no-convert",
-        action="store_true",
-        help="Skip HEIC conversion and only use grid-ready image files.",
+        "--max-images",
+        type=int,
+        default=DEFAULT_MAX_IMAGES,
+        help=f"Maximum number of input images. Defaults to {DEFAULT_MAX_IMAGES}.",
     )
     parser.add_argument(
-        "--convert-only",
-        action="store_true",
-        help="Convert HEIC/HEIF files to JPG and stop before creating the grid.",
+        "--max-image-pixels",
+        type=int,
+        default=DEFAULT_MAX_IMAGE_PIXELS,
+        help=(
+            "Maximum pixels allowed in any one image. "
+            f"Defaults to {DEFAULT_MAX_IMAGE_PIXELS}."
+        ),
     )
     parser.add_argument(
-        "--recursive",
-        action="store_true",
-        help="Search input_dir recursively.",
+        "--max-output-pixels",
+        type=int,
+        default=DEFAULT_MAX_OUTPUT_PIXELS,
+        help=(
+            "Maximum pixels allowed in the final grid. "
+            f"Defaults to {DEFAULT_MAX_OUTPUT_PIXELS}."
+        ),
     )
     return parser.parse_args()
 
@@ -106,13 +110,7 @@ def fail(message: str) -> None:
 
 
 def ensure_heif_support() -> None:
-    try:
-        from pillow_heif import register_heif_opener
-    except ImportError:
-        fail(
-            "HEIC/HEIF files require pillow-heif. Install dependencies with "
-            "'python -m pip install -r file-ops/images/receipt-grid/requirements.txt'."
-        )
+    from pillow_heif import register_heif_opener
 
     register_heif_opener()
 
@@ -124,74 +122,52 @@ def normalize_dir(path: str) -> Path:
     return directory
 
 
-def resolve_child_path(base: Path, path: str) -> Path:
-    candidate = Path(path).expanduser()
-    if candidate.is_absolute():
-        return candidate.resolve()
-    return (base / candidate).resolve()
-
-
-def collect_images(input_dir: Path, recursive: bool) -> list[Path]:
-    iterator: Iterable[Path]
-    iterator = input_dir.rglob("*") if recursive else input_dir.iterdir()
+def collect_images(input_dir: Path) -> list[Path]:
+    iterator = input_dir.iterdir()
     return sorted(
         path
         for path in iterator
-        if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        if path.is_file()
+        and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        and not path.name.startswith(".")
     )
 
 
-def is_relative_to(path: Path, parent: Path) -> bool:
-    try:
-        path.relative_to(parent)
-    except ValueError:
-        return False
-    return True
+def enforce_image_pixel_limit(
+    image: Image.Image,
+    image_path: Path,
+    max_image_pixels: int,
+) -> None:
+    image_pixels = image.width * image.height
+    if image_pixels > max_image_pixels:
+        fail(
+            f"{image_path} is {image_pixels:,} pixels, above --max-image-pixels "
+            f"({max_image_pixels:,}). Resize it or raise the limit."
+        )
 
 
-def build_converted_path(source: Path, input_dir: Path, converted_dir: Path) -> Path:
-    relative_parent = source.parent.relative_to(input_dir)
-    return converted_dir / relative_parent / f"{source.stem}.jpg"
-
-
-def save_as_jpeg(source: Path, destination: Path, quality: int) -> None:
+def save_image_atomically(
+    image: Image.Image,
+    destination: Path,
+    image_format: str,
+    **save_kwargs: object,
+) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with Image.open(source) as image:
-        image = ImageOps.exif_transpose(image)
-        if image.mode not in ("RGB", "L"):
-            image = image.convert("RGB")
-        image.save(destination, "JPEG", quality=quality, optimize=True)
-
-
-def convert_heic_files(
-    sources: list[Path],
-    input_dir: Path,
-    converted_dir: Path,
-    quality: int,
-    overwrite: bool,
-) -> list[Path]:
-    heic_files = [path for path in sources if path.suffix.lower() in HEIC_EXTENSIONS]
-    if not heic_files:
-        return []
-
-    ensure_heif_support()
-
-    converted: list[Path] = []
-    for source in heic_files:
-        destination = build_converted_path(source, input_dir, converted_dir)
-        if destination.exists() and not overwrite:
-            print(f"skip existing: {destination}")
-            converted.append(destination)
-            continue
-
-        print(f"convert: {source} -> {destination}")
-        try:
-            save_as_jpeg(source, destination, quality)
-        except (OSError, UnidentifiedImageError) as exc:
-            fail(f"Could not convert {source}: {exc}")
-        converted.append(destination)
-
-    return converted
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=destination.parent,
+            prefix=f".{destination.name}.",
+            suffix=destination.suffix or ".tmp",
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+        image.save(temp_path, image_format, **save_kwargs)
+        temp_path.replace(destination)
+    except OSError as exc:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+        fail(f"Could not write {destination}: {exc}")
 
 
 def balanced_grid_size(count: int) -> GridSize:
@@ -218,19 +194,32 @@ def make_grid(
     gap: int,
     background: str,
     quality: int,
+    max_image_pixels: int,
+    max_output_pixels: int,
 ) -> None:
     size = balanced_grid_size(len(images))
     canvas_width = size.columns * cell_width + (size.columns + 1) * gap
     canvas_height = size.rows * cell_height + (size.rows + 1) * gap
-    canvas = Image.new("RGB", (canvas_width, canvas_height), background)
+    output_pixels = canvas_width * canvas_height
+    if output_pixels > max_output_pixels:
+        fail(
+            f"Grid would be {output_pixels:,} pixels, above --max-output-pixels "
+            f"({max_output_pixels:,}). Use smaller cells or raise the limit."
+        )
+
+    try:
+        canvas = Image.new("RGB", (canvas_width, canvas_height), background)
+    except ValueError as exc:
+        fail(f"Invalid --background value: {background!r} ({exc})")
 
     for index, image_path in enumerate(images):
         row = index // size.columns
         column = index % size.columns
         try:
             with Image.open(image_path) as image:
+                enforce_image_pixel_limit(image, image_path, max_image_pixels)
                 fitted = fit_image(image, cell_width, cell_height)
-        except (OSError, UnidentifiedImageError) as exc:
+        except (OSError, UnidentifiedImageError, Image.DecompressionBombError) as exc:
             fail(f"Could not read {image_path}: {exc}")
 
         x = gap + column * (cell_width + gap) + (cell_width - fitted.width) // 2
@@ -239,12 +228,9 @@ def make_grid(
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output_format = output.suffix.lower()
-    if output_format in {".jpg", ".jpeg"}:
-        canvas.save(output, "JPEG", quality=quality, optimize=True)
-    elif output_format == ".png":
-        canvas.save(output, "PNG", optimize=True)
-    else:
-        fail("Output file must end with .jpg, .jpeg, or .png")
+    if output_format not in JPEG_EXTENSIONS:
+        fail("Output file must end with .jpg or .jpeg")
+    save_image_atomically(canvas, output, "JPEG", quality=quality, optimize=True)
 
     print(f"grid: {len(images)} image(s), {size.rows}x{size.columns}, {output}")
 
@@ -258,53 +244,43 @@ def main() -> None:
         fail("--cell-width and --cell-height must be positive")
     if args.gap < 0:
         fail("--gap must be zero or greater")
+    if args.max_images < 1:
+        fail("--max-images must be positive")
+    if args.max_image_pixels < 1:
+        fail("--max-image-pixels must be positive")
+    if args.max_output_pixels < 1:
+        fail("--max-output-pixels must be positive")
+    Image.MAX_IMAGE_PIXELS = args.max_image_pixels
 
     input_dir = normalize_dir(args.input_dir)
     output = Path(args.output).expanduser()
     if not output.is_absolute():
         output = (input_dir / output).resolve()
-    converted_dir = resolve_child_path(input_dir, args.converted_dir)
+    if output.exists() and not args.overwrite:
+        fail(f"Output already exists. Pass --overwrite to replace it: {output}")
 
-    sources = collect_images(input_dir, args.recursive)
+    sources = collect_images(input_dir)
     sources = [path for path in sources if path.resolve() != output]
-    sources = [path for path in sources if not is_relative_to(path.resolve(), converted_dir)]
-    sources = [path for path in sources if not path.name.startswith(".")]
     if not sources:
         fail(f"No supported receipt images found in {input_dir}")
-
-    heic_sources = [path for path in sources if path.suffix.lower() in HEIC_EXTENSIONS]
-    grid_ready_sources = [
-        path for path in sources if path.suffix.lower() in GRID_READY_EXTENSIONS
-    ]
-
-    converted_heic: list[Path] = []
-    if heic_sources and not args.no_convert:
-        converted_heic = convert_heic_files(
-            heic_sources,
-            input_dir,
-            converted_dir,
-            args.quality,
-            args.overwrite,
+    if len(sources) > args.max_images:
+        fail(
+            f"Found {len(sources)} supported images, above --max-images "
+            f"({args.max_images}). Move extras out or raise the limit."
         )
-    elif heic_sources:
-        print(f"skip HEIC conversion: {len(heic_sources)} file(s)")
-
-    if args.convert_only:
-        print(f"converted: {len(converted_heic)} file(s)")
-        return
-
-    grid_images = sorted(set(converted_heic + grid_ready_sources))
-    if not grid_images:
-        fail("No grid-ready images available after conversion.")
+    if any(path.suffix.lower() in HEIC_EXTENSIONS for path in sources):
+        ensure_heif_support()
 
     make_grid(
-        grid_images,
+        sources,
         output,
         args.cell_width,
         args.cell_height,
         args.gap,
         args.background,
         args.quality,
+        args.max_image_pixels,
+        args.max_output_pixels,
     )
 
 

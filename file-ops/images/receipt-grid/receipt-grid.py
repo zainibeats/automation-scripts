@@ -68,11 +68,6 @@ def parse_args() -> argparse.Namespace:
         help="Spacing between receipts in pixels. Defaults to 24.",
     )
     parser.add_argument(
-        "--background",
-        default="black",
-        help="Grid background color understood by Pillow. Defaults to black.",
-    )
-    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="Overwrite the output JPG if it already exists.",
@@ -173,7 +168,7 @@ def save_image_atomically(
 def balanced_grid_size(count: int) -> GridSize:
     if count < 1:
         fail("No images available for the grid.")
-    rows = max(1, math.floor(math.sqrt(count)))
+    rows = math.ceil(math.sqrt(count))
     columns = math.ceil(count / rows)
     return GridSize(rows=rows, columns=columns)
 
@@ -192,7 +187,6 @@ def make_grid(
     cell_width: int,
     cell_height: int,
     gap: int,
-    background: str,
     quality: int,
     max_image_pixels: int,
     max_output_pixels: int,
@@ -207,10 +201,7 @@ def make_grid(
             f"({max_output_pixels:,}). Use smaller cells or raise the limit."
         )
 
-    try:
-        canvas = Image.new("RGB", (canvas_width, canvas_height), background)
-    except ValueError as exc:
-        fail(f"Invalid --background value: {background!r} ({exc})")
+    canvas = Image.new("RGB", (canvas_width, canvas_height), "white")
 
     for index, image_path in enumerate(images):
         row = index // size.columns
@@ -277,7 +268,6 @@ def main() -> None:
         args.cell_width,
         args.cell_height,
         args.gap,
-        args.background,
         args.quality,
         args.max_image_pixels,
         args.max_output_pixels,

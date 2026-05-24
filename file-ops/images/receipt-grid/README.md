@@ -9,7 +9,7 @@ grid that can be attached to a report, archived, or added to a PDF.
 - Python 3.10+
 - `Pillow`
 - `pillow-heif`
-- `pypdf`
+- `pypdf[crypto]`
 
 ## Install
 
@@ -93,9 +93,10 @@ python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-e
 
 Existing output files are not replaced unless `--overwrite` is passed.
 
-The append script expects the input PDF to be unencrypted and small. The
-default input PDF limit is 10 pages; raise it only when larger files are
-expected:
+The append script can handle unencrypted PDFs and owner-restricted PDFs that
+open with an empty password. PDFs that require a user password are not
+supported. The default input PDF limit is 10 pages; raise it only when larger
+files are expected:
 
 ```bash
 python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-expenses_date.jpg --max-pdf-pages 20
@@ -107,9 +108,9 @@ python file-ops/images/receipt-grid/append-receipt-page.py ~/Desktop/firstname-e
   the default safety limit of 40 images.
 - Only scans files directly inside the input folder. Subfolders are ignored.
 - Leaves original receipt images untouched and does not keep converted copies.
-- Builds balanced grids such as `1x2`, `2x2`, `2x3`, `2x4`, `3x4`, and `4x4`.
+- Builds balanced grids such as `1x1`, `2x1`, `2x2`, `3x2`, `3x3`, and `4x3`.
 - Always writes the montage as JPG.
-- Uses a black background by default.
+- Uses a white background.
 - Replaces generated image/PDF files atomically, so an interrupted run is less
   likely to leave a partial final output.
 - Fails clearly when inputs exceed configured safety limits. Use

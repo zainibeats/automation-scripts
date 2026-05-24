@@ -173,6 +173,22 @@ def write_pdf_atomically(writer: object, output_pdf: Path) -> None:
         fail(f"Could not write output PDF {output_pdf}: {exc}")
 
 
+def decrypt_reader_if_needed(reader: object, source_pdf: Path) -> None:
+    if not getattr(reader, "is_encrypted", False):
+        return
+
+    try:
+        decrypt_result = reader.decrypt("")  # type: ignore[attr-defined]
+    except Exception as exc:
+        fail(f"Could not decrypt input PDF {source_pdf} with an empty password: {exc}")
+
+    if not decrypt_result:
+        fail(
+            "Input PDF is encrypted and could not be opened with an empty password. "
+            "This script can handle owner-restricted PDFs, but not PDFs that require a password."
+        )
+
+
 def append_pdf_page(
     source_pdf: Path,
     image_page_pdf: Path,
@@ -187,8 +203,7 @@ def append_pdf_page(
     except Exception as exc:
         fail(f"Could not read PDF input: {exc}")
 
-    if source_reader.is_encrypted:
-        fail("Input PDF is encrypted. This workflow expects the downloaded PDF to be unencrypted.")
+    decrypt_reader_if_needed(source_reader, source_pdf)
 
     source_page_count = len(source_reader.pages)
     if source_page_count < 1:

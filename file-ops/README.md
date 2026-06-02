@@ -4,12 +4,16 @@ Scripts for local file and media manipulation.
 
 ## Image Utilities
 
-### `images/receipt-grid/receipt-grid.py`
+### Receipt PDF Tools
 
-Converts HEIC/HEIF receipt images to JPG when needed and combines receipt
-images into one balanced grid image. Supports Windows, macOS, and Linux.
+Tools for preparing weekly receipt attachments. The scripts can combine receipt
+images into a single JPG grid and optionally append that grid image to the end of
+an existing PDF.
 
-See `images/receipt-grid/README.md` for install and usage instructions.
+This toolset was moved into its own repository because it grew beyond a simple
+one-file utility.
+
+Repository: [image-pdf-tools](https://github.com/zainibeats/image-pdf-tools)
 
 ### `images/heic-to-jpg.sh`
 

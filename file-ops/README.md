@@ -2,6 +2,10 @@
 
 Scripts for local file and media manipulation.
 
+Most scripts accept command-line options and also read a per-directory `.env`
+file when present. Copy the relevant `.env.example` file to `.env` for repeated
+local defaults.
+
 ## Image Utilities
 
 ### Receipt PDF Tools
@@ -27,7 +31,13 @@ Dependencies:
 - Debian/Ubuntu: `sudo apt install libheif-examples`
 - macOS: `brew install libheif`
 
-Common configuration values are at the top of the script:
+Usage:
+
+```bash
+./images/heic-to-jpg.sh --input-dir ~/Pictures --output-dir ~/Pictures/converted
+```
+
+Common options and `.env` values:
 
 - `INPUT_DIR`
 - `OUTPUT_DIR`
@@ -48,7 +58,13 @@ Dependencies:
 - Debian/Ubuntu: `sudo apt install imagemagick`
 - macOS: `brew install imagemagick`
 
-Common configuration values are at the top of the script:
+Usage:
+
+```bash
+./images/montage.sh --input-dir ~/Pictures --output-file contact-sheet.png
+```
+
+Common options and `.env` values:
 
 - `INPUT_DIR`
 - `OUTPUT_FILE`
@@ -87,7 +103,13 @@ Notes:
 Bash script that appends the `.mp3` extension to every file in a configured
 directory.
 
-Configure this variable before running:
+Usage:
+
+```bash
+./renaming/append-mp3.sh /path/to/folder
+```
+
+Options and `.env` values:
 
 - `TARGET_DIR`
 
@@ -97,8 +119,14 @@ PowerShell script for batch renaming files using names from a text file. It
 matches files in alphabetical order, preserves extensions, and can ignore
 metadata after commas in the names list.
 
-Configure these variables before running:
+Usage:
 
-- `$namesFilePath`
-- `$targetFolderPath`
-- `$fileFilter`
+```powershell
+.\renaming\rename-from-list.ps1 -NamesFilePath C:\Path\To\names.txt -TargetFolderPath C:\Path\To\Files
+```
+
+Options and `.env` values:
+
+- `NAMES_FILE_PATH`
+- `TARGET_FOLDER_PATH`
+- `FILE_FILTER`

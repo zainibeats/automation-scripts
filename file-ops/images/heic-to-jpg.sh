@@ -2,8 +2,47 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -f "$SCRIPT_DIR/.env" ]]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$SCRIPT_DIR/.env"
+    set +a
+fi
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Batch convert HEIC/HEIF images to JPEG.
+
+Options:
+  -i, --input-dir DIR       Source directory
+  -o, --output-dir DIR      Output directory
+  -q, --quality NUM         JPEG quality, default: $QUALITY
+      --recursive BOOL      Scan recursively, default: $RECURSIVE
+      --overwrite BOOL      Replace existing output files, default: $OVERWRITE
+      --move-originals BOOL Move originals after conversion, default: $MOVE_ORIGINALS
+      --archive-dir DIR     Archive directory for originals
+      --log-file FILE       Optional log file
+  -h, --help                Show this help message
+
+Configuration:
+  Options can also be set in $SCRIPT_DIR/.env or the environment using the
+  matching uppercase variable names.
+EOF
+}
+
+require_value() {
+    if [[ $# -lt 2 ]]; then
+        echo "Error: $1 requires a value." >&2
+        exit 1
+    fi
+}
+
 # =============================================================================
-# CONFIG — edit these variables before running
+# CONFIG
 # =============================================================================
 
 INPUT_DIR="${INPUT_DIR:-$HOME/Pictures}"
@@ -14,6 +53,21 @@ QUALITY="${QUALITY:-90}"
 MOVE_ORIGINALS="${MOVE_ORIGINALS:-false}"
 ARCHIVE_DIR="${ARCHIVE_DIR:-$HOME/Pictures/originals}"
 LOG_FILE="${LOG_FILE:-}"          # leave empty to disable file logging
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -i|--input-dir)       require_value "$@"; INPUT_DIR="$2"; shift 2 ;;
+        -o|--output-dir)      require_value "$@"; OUTPUT_DIR="$2"; shift 2 ;;
+        -q|--quality)         require_value "$@"; QUALITY="$2"; shift 2 ;;
+        --recursive)          require_value "$@"; RECURSIVE="$2"; shift 2 ;;
+        --overwrite)          require_value "$@"; OVERWRITE="$2"; shift 2 ;;
+        --move-originals)     require_value "$@"; MOVE_ORIGINALS="$2"; shift 2 ;;
+        --archive-dir)        require_value "$@"; ARCHIVE_DIR="$2"; shift 2 ;;
+        --log-file)           require_value "$@"; LOG_FILE="$2"; shift 2 ;;
+        -h|--help)            usage; exit 0 ;;
+        *)                    echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
+    esac
+done
 
 # =============================================================================
 # INTERNAL — do not edit below

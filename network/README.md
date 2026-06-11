@@ -2,6 +2,10 @@
 
 Scripts for remote mounts and network/VPN checks.
 
+Most scripts accept command-line options and also read a per-directory `.env`
+file when present. Copy the relevant `.env.example` file to `.env` for repeated
+local defaults.
+
 ## Remote Mounts
 
 ### `remote-mount/nfs-mount.sh`
@@ -13,7 +17,13 @@ Dependencies:
 - `nfs-common` on Linux
 - Root or sudo access
 
-Configure these values before running:
+Usage:
+
+```bash
+sudo ./remote-mount/nfs-mount.sh --server-ip 192.168.1.100 --nfs-share /mnt/data --mount-point ~/remote-mount/nfs
+```
+
+Options and `.env` values:
 
 - `SERVER_IP`
 - `NFS_SHARE`
@@ -29,11 +39,18 @@ Dependencies:
 - `sshfs`
 - SSH access to the configured server
 
-Configure these values before running:
+Usage:
 
-- `remote_mount_dir`
-- `server`
-- `port`
+```bash
+./remote-mount/sshfs-mount.sh --server username@192.168.1.100 --remote-path / --mount-dir ~/remote_mount/sshfs
+```
+
+Options and `.env` values:
+
+- `SERVER`
+- `REMOTE_PATH`
+- `REMOTE_MOUNT_DIR`
+- `PORT`
 
 ## VPN Check
 

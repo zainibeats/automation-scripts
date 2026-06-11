@@ -1,10 +1,9 @@
 # Audio Transfer Scripts
 
-This directory contains scripts for processing and transferring audio files, such as WAV and MP3, to remote servers or for batch renaming.
+This directory contains scripts for transferring audio files, such as WAV and MP3, to remote servers.
 
 ## Scripts
 
-- **append-mp3.sh**: Appends the .mp3 extension to files in a directory.
 - **ssh-wav-mp3.sh**: Transfers audio files (WAV/MP3) to a remote server via SSH.
 - **ssh-wav-mp3-master-stems.sh**: Transfers master audio files and handles stem files for advanced workflows.
 
@@ -13,4 +12,16 @@ This directory contains scripts for processing and transferring audio files, suc
 - SSH access (for transfer scripts)
 
 ## Usage
-See each script's comments or run with `--help` for usage instructions.
+Pass the source and destination directly:
+
+```bash
+./ssh-wav-mp3.sh /local/audio user@host:/remote/audio
+./ssh-wav-mp3-master-stems.sh /local/audio user@host:/remote/audio
+```
+
+For repeated defaults, copy `.env.example` to `.env` in this directory and set:
+
+- `SOURCE_DIR`
+- `DEST_SSH`
+
+Run either script with `--help` for all options.

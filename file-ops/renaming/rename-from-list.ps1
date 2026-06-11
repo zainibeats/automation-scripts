@@ -2,27 +2,97 @@
 # Purpose: Batch rename files using names from a text file
 # The script preserves file extensions and can ignore metadata after commas in the names list
 
-# Configuration paths
-# Format of names.txt: one entry per line as "Name,optional_metadata"
-# Everything after the comma is ignored when renaming
-$namesFilePath = "C:\Path\To\names.txt"
+param(
+    [string]$NamesFilePath = $env:NAMES_FILE_PATH,
+    [string]$TargetFolderPath = $env:TARGET_FOLDER_PATH,
+    [string]$FileFilter = $(if ($env:FILE_FILTER) { $env:FILE_FILTER } else { "*.*" }),
+    [switch]$Help
+)
 
-# Directory containing files to be renamed
-# Files will be matched to names in alphabetical order
-$targetFolderPath = "C:\Path\To\Files"
+function Show-Usage {
+    Write-Host @"
+Usage: .\rename-from-list.ps1 -NamesFilePath PATH -TargetFolderPath PATH [-FileFilter FILTER]
 
-# Optional: Set the file type filter (e.g., "*.gif", "*.jpg", "*.*" for all files)
-$fileFilter = "*.*"
+Batch rename files using names from a text file.
 
-# Extract names from the text file
+Options:
+  -NamesFilePath      Text file with one name per line. Text after a comma is ignored.
+  -TargetFolderPath   Directory containing files to rename.
+  -FileFilter         File filter, default: *.*
+  -Help               Show this help message.
+
+Configuration:
+  Values can also be set in environment variables or in .env next to this script:
+  NAMES_FILE_PATH, TARGET_FOLDER_PATH, FILE_FILTER
+"@
+}
+
+function Import-DotEnv {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    Get-Content -LiteralPath $Path | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) {
+            return
+        }
+
+        $key, $value = $line -split "=", 2
+        $key = $key.Trim()
+        $value = $value.Trim().Trim('"').Trim("'")
+
+        if ($key) {
+            [Environment]::SetEnvironmentVariable($key, $value, "Process")
+        }
+    }
+}
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+Import-DotEnv -Path (Join-Path $scriptDir ".env")
+
+if (-not $NamesFilePath) {
+    $NamesFilePath = $env:NAMES_FILE_PATH
+}
+if (-not $TargetFolderPath) {
+    $TargetFolderPath = $env:TARGET_FOLDER_PATH
+}
+if (-not $FileFilter) {
+    $FileFilter = if ($env:FILE_FILTER) { $env:FILE_FILTER } else { "*.*" }
+}
+
+if ($Help) {
+    Show-Usage
+    exit 0
+}
+
+if (-not $NamesFilePath -or -not $TargetFolderPath) {
+    Write-Error "NamesFilePath and TargetFolderPath are required."
+    Show-Usage
+    exit 1
+}
+
+if (-not (Test-Path -LiteralPath $NamesFilePath)) {
+    Write-Error "Names file does not exist: $NamesFilePath"
+    exit 1
+}
+
+if (-not (Test-Path -LiteralPath $TargetFolderPath -PathType Container)) {
+    Write-Error "Target folder does not exist: $TargetFolderPath"
+    exit 1
+}
+
+# Extract names from the text file.
 # Split each line at comma and trim whitespace from the name portion
-$names = Get-Content $namesFilePath | ForEach-Object {
+$names = Get-Content $NamesFilePath | ForEach-Object {
     ($_ -split ",")[0].Trim()
 }
 
 # Get files sorted alphabetically to ensure consistent ordering
 # This ordering will match the sequence of names in the text file
-$files = Get-ChildItem -Path $targetFolderPath -Filter $fileFilter | Sort-Object Name
+$files = Get-ChildItem -Path $TargetFolderPath -Filter $FileFilter | Sort-Object Name
 
 # Validate file count matches name count to prevent partial renaming
 if ($files.Count -ne $names.Count) {

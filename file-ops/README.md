@@ -82,6 +82,15 @@ Notes:
 
 ## Renaming
 
+### `renaming/append-mp3.sh`
+
+Bash script that appends the `.mp3` extension to every file in a configured
+directory.
+
+Configure this variable before running:
+
+- `TARGET_DIR`
+
 ### `renaming/rename-from-list.ps1`
 
 PowerShell script for batch renaming files using names from a text file. It

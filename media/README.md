@@ -8,8 +8,6 @@ Detailed notes live in [audio-transfer/README.md](audio-transfer/README.md).
 
 Scripts:
 
-- `audio-transfer/append-mp3.sh` - appends the `.mp3` extension to files in a
-  directory.
 - `audio-transfer/ssh-wav-mp3.sh` - transfers WAV/MP3 files to a remote server
   over SSH.
 - `audio-transfer/ssh-wav-mp3-master-stems.sh` - transfers master audio files
